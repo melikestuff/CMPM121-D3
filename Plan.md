@@ -35,25 +35,40 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 # Gameplay implementation
 
+Map things
+
 1. Create Leaflet map centered on the classroom coordinates
 2. Lock zoom level
 3. Add a player marker with tooltip
+
+Grid Rendering
 4. Write helper to convert cell i,j -> lat/lng bounds
 5. Draw a single cell rectangle for testing
 6. Draw the entire grid (15×15 around player)
 7. Add a divIcon text marker at each cell to display token values
+
+Token Spawning
 8. Use luck() with deterministic hashing to produce:
 9. consistent empty/non-empty result
 10. consistent token values
 11. Make tokens visible without clicking
+
+Interaction
 12. Restrict interaction: only allow clicks within radius (3 cells)
 13. Implement picking up a token
 14. Implement holding exactly one token at any time
 15. Implement placing a token on an empty cell
 16. Implement crafting (same value -> one token of double value)
 17. Cell updates visually after interaction
-18. reate status panel showing held token or “nothing”
+
+Inventory UI
+18. Create status panel showing held token or “nothing”
 19. Update status after each interaction
+
+Victionary
 20. Detect when crafted value reaches threshold (8/16/etc.)
 21. Display win notification
-22. Deploy working D3.a version
+
+Misc
+22. Touch up code if needed
+23. Deploy working D3.a version
