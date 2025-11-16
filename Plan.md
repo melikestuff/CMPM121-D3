@@ -1,17 +1,17 @@
 # D3: {game title goes here}
 
-# Game Design Vision
+Game Design Vision
 
 This game is map-based crafting game inspired by 4096 and Pokémon Go.
 Players explore real-world map cells to collect and combine tokens. Matching tokens can be crafted into higher-value tokens, and the player wins when they produce a sufficiently high-value one. All interaction is restricted to nearby cells, encouraging movement.
 
-# Technologies
+Technologies
 
 - TypeScript for most game code, little to no explicit HTML, and all CSS collected in common `style.css` file
 - Deno and Vite for building
 - GitHub Actions + GitHub Pages for deployment automation
 
-# Assignments
+Assignments
 
 ## D3.a: Core mechanics (token collection and crafting)
 
@@ -20,22 +20,22 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ### Steps
 
-# Set up
+Set up
 
 1. Create repo using instructor starter template
 2. Enable GitHub Pages through GitHub Actions
 3. Create this PLAN.md
 4. Add initial commit with empty main.ts structure
 
-# Delete Starter Code & start fresh
+Delete Starter Code & start fresh
 
 1. Copy starter main.ts -> reference.ts for safety
 2. Delete the entire starter main.ts
 3. Start fresh with new file structure
 
-# Gameplay implementation
+### Gameplay implementation
 
-Map things
+## Map things
 
 1. Create Leaflet map centered on the classroom coordinates
 2. Lock zoom level

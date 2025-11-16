@@ -28,7 +28,7 @@ statusPanelDiv.id = "statusPanel";
 document.body.append(statusPanelDiv);
 
 // Inventory state (for now just display "nothing")
-let heldToken: number | null = null;
+const heldToken: number | null = null;
 
 function updateStatus() {
   if (heldToken === null) {
