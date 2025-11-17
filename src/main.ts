@@ -254,6 +254,54 @@ function drawGrid() {
 }
 
 // -----------------------------------------
+// Map Scrolling — redraw grid when map finishes moving
+// -----------------------------------------
+map.on("moveend", () => {
+  // Determine which cell is at the center of the screen
+  const center = map.getCenter();
+  const viewCell = latLngToCell(center.lat, center.lng);
+
+  // Remove all currently drawn tiles
+  clearGrid();
+
+  // Rebuild the grid around the map's center (viewCell), NOT playerCell
+  for (let di = -GRID_RADIUS; di <= GRID_RADIUS; di++) {
+    for (let dj = -GRID_RADIUS; dj <= GRID_RADIUS; dj++) {
+      const cell = {
+        i: viewCell.i + di,
+        j: viewCell.j + dj,
+      };
+
+      const bounds = cellToBounds(cell);
+      const rect = leaflet.rectangle(bounds, {
+        color: "#555",
+        weight: 1,
+      }).addTo(map);
+
+      const value = getCellValue(cell);
+      const centerLatLng = bounds.getCenter();
+
+      const icon = leaflet.divIcon({
+        className: "cellText",
+        html: value !== null ? `<span>${value}</span>` : "",
+      });
+
+      const textMarker = leaflet.marker(centerLatLng, { icon }).addTo(map);
+
+      drawnLayers.push(rect, textMarker);
+
+      // Interactions STILL depend on distance to *playerCell*, not viewCell
+      rect.on("click", () => handleCellClick(cell, textMarker));
+    }
+  }
+
+  // Ensure player's actual position marker remains visible
+  const playerLat = playerCell.i * TILE;
+  const playerLng = playerCell.j * TILE;
+  playerMarker.setLatLng([playerLat, playerLng]);
+});
+
+// -----------------------------------------
 // Player movement and storage
 // -----------------------------------------
 // Convert player lat/long to cell coords and update marker + view

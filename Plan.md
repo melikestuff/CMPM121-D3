@@ -126,3 +126,8 @@ Player can:
 [x] - Recenter map using map.setView()
 [x] - Redraw grid
 [x] Confirm interactions only work near new location
+
+## Examine the moveend event that gets fired in Leaflet map objects to find out how to notice when the player has finished moving the map
+
+[x] Implement moveend event listener
+[x] Test if it works: Interacting with far away cells, cells close to player but far away.
