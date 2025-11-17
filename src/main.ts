@@ -67,6 +67,21 @@ const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
 document.body.append(statusPanelDiv);
 
+// -----------------------------------------
+// Movement Buttons (N / S / E / W)
+// -----------------------------------------
+const movementDiv = document.createElement("div");
+movementDiv.style.marginTop = "1rem";
+
+movementDiv.innerHTML = `
+  <button id="move-north">North</button>
+  <button id="move-south">South</button>
+  <button id="move-east">East</button>
+  <button id="move-west">West</button>
+`;
+
+controlPanelDiv.append(movementDiv);
+
 // Inventory: one token max
 let heldToken: number | null = null;
 
@@ -238,8 +253,10 @@ function drawGrid() {
   }
 }
 
+// -----------------------------------------
+// Player movement and storage
+// -----------------------------------------
 // Convert player lat/long to cell coords and update marker + view
-
 function updatePlayerPosition() {
   const lat = playerCell.i * TILE;
   const lng = playerCell.j * TILE;
@@ -247,7 +264,32 @@ function updatePlayerPosition() {
   playerMarker.setLatLng([lat, lng]);
   map.setView([lat, lng], 19);
 }
+function movePlayer(di: number, dj: number) {
+  // Update the player's global cell coordinates
+  playerCell.i += di;
+  playerCell.j += dj;
 
+  // Update map center & player marker
+  updatePlayerPosition();
+
+  // Rebuild the grid around the NEW player position
+  drawGrid();
+}
+document.getElementById("move-north")!.addEventListener("click", () => {
+  movePlayer(1, 0);
+});
+
+document.getElementById("move-south")!.addEventListener("click", () => {
+  movePlayer(-1, 0);
+});
+
+document.getElementById("move-east")!.addEventListener("click", () => {
+  movePlayer(0, 1);
+});
+
+document.getElementById("move-west")!.addEventListener("click", () => {
+  movePlayer(0, -1);
+});
 // Initial draw
 drawGrid();
 updatePlayerPosition();

@@ -115,3 +115,14 @@ Player can:
 [x] Initialize playerCell by converting classroom lat/long to a cell
 [x] Map center always reflects playerCell
 [x] Update playerMarker position dynamically
+
+## Movement Buttons
+
+[x] Add N/S/E/W buttons to control panel, AKA W,S,D,A controls.
+[x] Add movePlayer(di, dj) function
+[x] Movement updates:
+[x] - playerCell.i += di
+[x] - playerCell.j += dj
+[x] - Recenter map using map.setView()
+[x] - Redraw grid
+[x] Confirm interactions only work near new location
