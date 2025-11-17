@@ -83,22 +83,22 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ## Software Requirements (per assignment)
 
-[] Interface provides movement buttons (N/S/E/W)
-[] Grid recentered as player moves
-[] Cells appear everywhere the player pans or travels
-[] Use an earth-spanning grid anchored at Null Island
-[] Cell state does not persist once it scrolls off-screen
+[x] Interface provides movement buttons (N/S/E/W)
+[x] Grid recentered as player moves
+[x] Cells appear everywhere the player pans or travels
+[x] Use an earth-spanning grid anchored at Null Island
+[x] Cell state does not persist once it scrolls off-screen
 [x] Conversion helpers between lat/lng and cell indices
-[] Detect map scrolling (via Leaflet’s moveend)
+[x] Detect map scrolling (via Leaflet’s moveend)
 
 ## Gameplay Requirements (per assignment)
 
 Player can:
-[] Move using buttons Or scroll the map freely
+[x] Move using buttons Or scroll the map freely
 [x?] Interaction only allowed near the player’s true location
-[] Cells appear memoryless -> farming allowed
-[] Player should now be able to craft a higher value token
-[] Raise victory requirement appropriately
+[x] Cells appear memoryless -> farming allowed
+[x] Player should now be able to craft a higher value token
+[x] Raise victory requirement appropriately
 
 ## New Global Coordinate System
 
@@ -143,4 +143,17 @@ Player can:
 ## Crafting update
 
 [x] Increase number required to win (32?)
-[x] Victor is achieved with this new number
+[x] Victory is achieved with this new number
+
+## Double checking for submission
+
+[x] Buttons for movement!
+[x] Grid cells spawn/despawn as camera / player moves
+[x] Null island
+[x] Gameplay requirements for map and crafting
+[x] - Map can be moved by mouse or scrolling, seeing cells
+[x] - Memoryless cells, allowing for farming
+[x] - Higher victory number needed to end the game?
+[x] Grid representation as i and j
+[x] Functions / helper functions to convert lat/lng <-> grid cell{i,j}
+[x] Leaflet moveend event listener implementation
