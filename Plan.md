@@ -157,3 +157,10 @@ Player can:
 [x] Grid representation as i and j
 [x] Functions / helper functions to convert lat/lng <-> grid cell{i,j}
 [x] Leaflet moveend event listener implementation
+
+## D3.C implementation
+
+[x] Cells should use effective memory-saving strategys so cells not visible on the map do not require memory for storage if they have not been modified by the player.
+[x] Cells store their state if modified
+[x] Map has a memory of their state even when not visible
+[x] Use a map using cells as keys and token as values

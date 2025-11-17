@@ -295,11 +295,6 @@ map.on("moveend", () => {
     }
   }
 
-  // Purge cells that went off-screen (memoryless behavior)
-  for (const key of cellStates.keys()) {
-    if (!newVisible.has(key)) cellStates.delete(key);
-  }
-
   drawGrid(viewCell);
 
   // Player stays where they are
