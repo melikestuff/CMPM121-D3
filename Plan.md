@@ -131,3 +131,11 @@ Player can:
 
 [x] Implement moveend event listener
 [x] Test if it works: Interacting with far away cells, cells close to player but far away.
+
+## Memoryless Cells
+
+[x] Remove Map-based persistent cell state from D3.a
+[x] Always compute token value using luck when cell becomes visible
+[x] Confirm:
+[x] - Leaving and returning resets cell state
+[x] - Farming is possible as grids regenerate off-screen

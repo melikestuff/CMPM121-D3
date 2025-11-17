@@ -9,7 +9,8 @@ import luck from "./_luck.ts";
 // -----------------------------------------
 // Constants
 // -----------------------------------------
-const CLASSROOM = leaflet.latLng(36.997936938057016, -122.05703507501151);
+const CLASS_LAT = 36.997936938057016;
+const CLASS_LNG = -122.05703507501151;
 
 const TILE = 1e-4; // degrees per cell
 const GRID_RADIUS = 12; // grid extends this many cells in each direction
@@ -21,7 +22,6 @@ const TARGET_VALUE = 16; // will increase in a later D3.b stage
 // -----------------------------------------
 type Cell = { i: number; j: number };
 
-// Convert real lat/lng → global grid indices (anchored at 0,0)
 function latLngToCell(lat: number, lng: number): Cell {
   return {
     i: Math.floor(lat / TILE),
@@ -29,7 +29,6 @@ function latLngToCell(lat: number, lng: number): Cell {
   };
 }
 
-// Convert global grid indices -> lat/lng bounds
 function cellToBounds(cell: Cell) {
   const lat0 = cell.i * TILE;
   const lng0 = cell.j * TILE;
@@ -43,44 +42,30 @@ function cellKey(cell: Cell): string {
 }
 
 // Distance in cell units from the player’s cell
-function cellDistance(cell: Cell, playerCell: Cell): number {
-  const di = cell.i - playerCell.i;
-  const dj = cell.j - playerCell.j;
-  return Math.sqrt(di * di + dj * dj);
+function cellDistance(a: Cell, b: Cell): number {
+  return Math.sqrt((a.i - b.i) ** 2 + (a.j - b.j) ** 2);
 }
 
 // -----------------------------------------
 // Player position (in both lat/lng and cell coords)
 // -----------------------------------------
-const playerLatLng = CLASSROOM;
-const playerCell: Cell = latLngToCell(playerLatLng.lat, playerLatLng.lng);
+const playerCell: Cell = latLngToCell(CLASS_LAT, CLASS_LNG);
+
+function playerLatLng(): leaflet.LatLngExpression {
+  return [playerCell.i * TILE, playerCell.j * TILE];
+}
 
 // -----------------------------------------
 // UI setup
 // -----------------------------------------
 const controlPanelDiv = document.createElement("div");
 controlPanelDiv.id = "controlPanel";
-controlPanelDiv.textContent = "World of Bits — D3.b Stage 2";
+controlPanelDiv.textContent = "World of Bits — D3.b";
 document.body.append(controlPanelDiv);
 
 const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
 document.body.append(statusPanelDiv);
-
-// -----------------------------------------
-// Movement Buttons (N / S / E / W)
-// -----------------------------------------
-const movementDiv = document.createElement("div");
-movementDiv.style.marginTop = "1rem";
-
-movementDiv.innerHTML = `
-  <button id="move-north">North</button>
-  <button id="move-south">South</button>
-  <button id="move-east">East</button>
-  <button id="move-west">West</button>
-`;
-
-controlPanelDiv.append(movementDiv);
 
 // Inventory: one token max
 let heldToken: number | null = null;
@@ -94,16 +79,16 @@ function updateStatus() {
 }
 updateStatus();
 
-// Map container
+// -----------------------------------------
+// Map setup
+// -----------------------------------------
 const mapDiv = document.createElement("div");
 mapDiv.id = "map";
 document.body.append(mapDiv);
 
-// -----------------------------------------
-// Leaflet map setup
-// -----------------------------------------
+// Map center ALWAYS follows playerCell
 const map = leaflet.map(mapDiv, {
-  center: [playerCell.i * TILE, playerCell.j * TILE],
+  center: playerLatLng(),
   zoom: 19,
   minZoom: 19,
   maxZoom: 19,
@@ -117,42 +102,48 @@ leaflet
   })
   .addTo(map);
 
-// Player marker at classroom
-const playerMarker = leaflet.marker([
-  playerCell.i * TILE,
-  playerCell.j * TILE,
-]).addTo(map).bindTooltip("You are here!");
+// Player marker
+const playerMarker = leaflet
+  .marker(playerLatLng())
+  .addTo(map)
+  .bindTooltip("You are here!");
 
-playerMarker.addTo(map).bindTooltip("You are here!");
+// Keep marker + map centered on player
+function updatePlayerPosition() {
+  const pos = playerLatLng();
+  playerMarker.setLatLng(pos);
+  map.setView(pos, 19);
+}
 
 // -----------------------------------------
-// Deterministic token spawning
+// TOKEN GENERATION (DETERMINISTIC)
 // -----------------------------------------
 function initialTokenValue(cell: Cell): number | null {
   const r = luck([cell.i, cell.j, "spawn"].toString());
 
   if (r < 0.25) {
     const lvl = 1 + Math.floor(luck([cell.i, cell.j, "value"].toString()) * 3);
-    return Math.pow(2, lvl); // 2, 4, or 8
+    return Math.pow(2, lvl);
   }
   return null;
 }
 
+// -----------------------------------------
+// CELL MEMORY (PERSIST WHILE VISIBLE, RESET WHEN OFF-SCREEN)
+// -----------------------------------------
 const cellStates = new Map<string, number | null>();
 
 function getCellValue(cell: Cell): number | null {
   const key = cellKey(cell);
-  if (cellStates.has(key)) {
-    return cellStates.get(key) ?? null;
-  }
-  const init = initialTokenValue(cell);
-  cellStates.set(key, init);
-  return init;
+  if (cellStates.has(key)) return cellStates.get(key)!;
+
+  const val = initialTokenValue(cell);
+  cellStates.set(key, val);
+  return val;
 }
 
-function setCellValue(cell: Cell, value: number | null) {
-  const key = cellKey(cell);
-  cellStates.set(key, value);
+function setCellValue(cell: Cell, val: number | null) {
+  cellStates.set(cellKey(cell), val);
 }
 
 // -----------------------------------------
@@ -161,35 +152,33 @@ function setCellValue(cell: Cell, value: number | null) {
 let drawnLayers: leaflet.Layer[] = [];
 
 function clearGrid() {
-  drawnLayers.forEach((layer) => map.removeLayer(layer));
+  drawnLayers.forEach((l) => map.removeLayer(l));
   drawnLayers = [];
 }
 
 function handleCellClick(cell: Cell, textMarker: leaflet.Marker) {
   // Enforce interaction radius based on global cell coordinates
   if (cellDistance(cell, playerCell) > INTERACT_RADIUS) {
-    alert("That cell is too far away to interact with.");
+    alert("Too far away to interact.");
     return;
   }
 
-  const current = getCellValue(cell);
-  const markerEl = textMarker.getElement();
-
-  const setLabel = (val: number | null) => {
-    if (!markerEl) return;
-    markerEl.innerHTML = val === null ? "" : `<span>${val}</span>`;
+  const el = textMarker.getElement();
+  const setLabel = (v: number | null) => {
+    if (!el) return;
+    el.innerHTML = v === null ? "" : `<span>${v}</span>`;
   };
 
-  // Empty cell
+  const currentText = el?.textContent?.trim();
+  const current = currentText === "" ? null : Number(currentText);
+
+  // Empty cell → place token
   if (current === null) {
     if (heldToken !== null) {
-      // Place held token into empty cell
-      setCellValue(cell, heldToken);
       setLabel(heldToken);
+      setCellValue(cell, heldToken);
       heldToken = null;
       updateStatus();
-    } else {
-      alert("Cell is empty and you're holding nothing.");
     }
     return;
   }
@@ -198,39 +187,35 @@ function handleCellClick(cell: Cell, textMarker: leaflet.Marker) {
   if (heldToken === null) {
     heldToken = current;
     updateStatus();
-    setCellValue(cell, null);
     setLabel(null);
+    setCellValue(cell, null);
     return;
   }
 
   // Cell has token, hand has token -> maybe craft
   if (heldToken === current) {
-    const newValue = current * 2;
-    setCellValue(cell, newValue);
-    setLabel(newValue);
+    const newVal = current * 2;
+    setLabel(newVal);
+    setCellValue(cell, newVal);
     heldToken = null;
     updateStatus();
 
-    if (newValue >= TARGET_VALUE) {
-      alert(`🎉 You win! Crafted a token of value ${newValue}!`);
+    if (newVal >= TARGET_VALUE) {
+      alert(`You crafted ${newVal}!`);
     }
   } else {
-    alert("Values do not match. You can only craft identical tokens.");
+    alert("Values must match to craft.");
   }
 }
 
-function drawGrid() {
+function drawGrid(centerCell: Cell) {
   clearGrid();
 
   for (let di = -GRID_RADIUS; di <= GRID_RADIUS; di++) {
     for (let dj = -GRID_RADIUS; dj <= GRID_RADIUS; dj++) {
-      const cell: Cell = {
-        i: playerCell.i + di,
-        j: playerCell.j + dj,
-      };
+      const cell = { i: centerCell.i + di, j: centerCell.j + dj };
 
       const bounds = cellToBounds(cell);
-
       const rect = leaflet.rectangle(bounds, {
         color: "#555",
         weight: 1,
@@ -253,91 +238,70 @@ function drawGrid() {
   }
 }
 
-// -----------------------------------------
-// Map Scrolling — redraw grid when map finishes moving
-// -----------------------------------------
-map.on("moveend", () => {
-  // Determine which cell is at the center of the screen
-  const center = map.getCenter();
-  const viewCell = latLngToCell(center.lat, center.lng);
-
-  // Remove all currently drawn tiles
-  clearGrid();
-
-  // Rebuild the grid around the map's center (viewCell), NOT playerCell
-  for (let di = -GRID_RADIUS; di <= GRID_RADIUS; di++) {
-    for (let dj = -GRID_RADIUS; dj <= GRID_RADIUS; dj++) {
-      const cell = {
-        i: viewCell.i + di,
-        j: viewCell.j + dj,
-      };
-
-      const bounds = cellToBounds(cell);
-      const rect = leaflet.rectangle(bounds, {
-        color: "#555",
-        weight: 1,
-      }).addTo(map);
-
-      const value = getCellValue(cell);
-      const centerLatLng = bounds.getCenter();
-
-      const icon = leaflet.divIcon({
-        className: "cellText",
-        html: value !== null ? `<span>${value}</span>` : "",
-      });
-
-      const textMarker = leaflet.marker(centerLatLng, { icon }).addTo(map);
-
-      drawnLayers.push(rect, textMarker);
-
-      // Interactions STILL depend on distance to *playerCell*, not viewCell
-      rect.on("click", () => handleCellClick(cell, textMarker));
-    }
-  }
-
-  // Ensure player's actual position marker remains visible
-  const playerLat = playerCell.i * TILE;
-  const playerLng = playerCell.j * TILE;
-  playerMarker.setLatLng([playerLat, playerLng]);
-});
+// Initial draw
+drawGrid(latLngToCell(CLASS_LAT, CLASS_LNG));
 
 // -----------------------------------------
-// Player movement and storage
+// Movement Buttons
 // -----------------------------------------
-// Convert player lat/long to cell coords and update marker + view
-function updatePlayerPosition() {
-  const lat = playerCell.i * TILE;
-  const lng = playerCell.j * TILE;
+const movementDiv = document.createElement("div");
+movementDiv.style.marginTop = "1rem";
 
-  playerMarker.setLatLng([lat, lng]);
-  map.setView([lat, lng], 19);
-}
+movementDiv.innerHTML = `
+  <button id="north">North</button>
+  <button id="south">South</button>
+  <button id="east">East</button>
+  <button id="west">West</button>
+`;
+
+controlPanelDiv.append(movementDiv);
+
 function movePlayer(di: number, dj: number) {
-  // Update the player's global cell coordinates
   playerCell.i += di;
   playerCell.j += dj;
 
-  // Update map center & player marker
-  updatePlayerPosition();
-
-  // Rebuild the grid around the NEW player position
-  drawGrid();
+  updatePlayerPosition(); // ONLY update map position
 }
-document.getElementById("move-north")!.addEventListener("click", () => {
-  movePlayer(1, 0);
-});
 
-document.getElementById("move-south")!.addEventListener("click", () => {
-  movePlayer(-1, 0);
-});
+document.getElementById("north")!.addEventListener(
+  "click",
+  () => movePlayer(1, 0),
+);
+document.getElementById("south")!.addEventListener(
+  "click",
+  () => movePlayer(-1, 0),
+);
+document.getElementById("east")!.addEventListener(
+  "click",
+  () => movePlayer(0, 1),
+);
+document.getElementById("west")!.addEventListener(
+  "click",
+  () => movePlayer(0, -1),
+);
 
-document.getElementById("move-east")!.addEventListener("click", () => {
-  movePlayer(0, 1);
-});
+// ==========================================================
+// MAP SCROLLING (TRIGGERS GRID REBUILD)
+// ==========================================================
+map.on("moveend", () => {
+  const center = map.getCenter();
+  const viewCell = latLngToCell(center.lat, center.lng);
 
-document.getElementById("move-west")!.addEventListener("click", () => {
-  movePlayer(0, -1);
+  // Determine visible cells
+  const newVisible = new Set<string>();
+  for (let di = -GRID_RADIUS; di <= GRID_RADIUS; di++) {
+    for (let dj = -GRID_RADIUS; dj <= GRID_RADIUS; dj++) {
+      newVisible.add(`${viewCell.i + di},${viewCell.j + dj}`);
+    }
+  }
+
+  // Purge cells that went off-screen (memoryless behavior)
+  for (const key of cellStates.keys()) {
+    if (!newVisible.has(key)) cellStates.delete(key);
+  }
+
+  drawGrid(viewCell);
+
+  // Player stays where they are
+  playerMarker.setLatLng(playerLatLng());
 });
-// Initial draw
-drawGrid();
-updatePlayerPosition();
