@@ -78,3 +78,33 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 [x] ]Touch up code if needed
 [x]]Deploy working D3.a version
+
+## D3.B: Globe-spanning Gameplay
+
+## Software Requirements (per assignment)
+
+[] Interface provides movement buttons (N/S/E/W)
+[] Grid recentered as player moves
+[] Cells appear everywhere the player pans or travels
+[] Use an earth-spanning grid anchored at Null Island
+[] Cell state does not persist once it scrolls off-screen
+[x] Conversion helpers between lat/lng and cell indices
+[] Detect map scrolling (via Leaflet’s moveend)
+
+## Gameplay Requirements (per assignment)
+
+Player can:
+[] Move using buttons Or scroll the map freely
+[x?] Interaction only allowed near the player’s true location
+[] Cells appear memoryless -> farming allowed
+[] Player should now be able to craft a higher value token
+[] Raise victory requirement appropriately
+
+## New Global Coordinate System
+
+[x] Create a Cell type: { i: number; j: number }
+[x] Define grid origin at Null Island (0° lat, 0° lng)
+[x] Replace classroom-relative grid with playerCell {i, j}
+[x] Create helpers:
+[x] - latLngToCell(lat, lng) function
+[x] - cellToBounds(i, j) function
