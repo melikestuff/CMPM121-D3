@@ -10,3 +10,10 @@
   width: 100%;
   height: 80vh;
 }
+
+.cellText span {
+  font-size: 14px;
+  font-weight: bold;
+  color: black;
+  text-shadow: 1px 1px 3px white;
+}
