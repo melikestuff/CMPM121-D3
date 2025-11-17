@@ -139,3 +139,8 @@ Player can:
 [x] Confirm:
 [x] - Leaving and returning resets cell state
 [x] - Farming is possible as grids regenerate off-screen
+
+## Crafting update
+
+[x] Increase number required to win (32?)
+[x] Victor is achieved with this new number

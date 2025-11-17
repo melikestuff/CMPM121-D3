@@ -15,7 +15,7 @@ const CLASS_LNG = -122.05703507501151;
 const TILE = 1e-4; // degrees per cell
 const GRID_RADIUS = 12; // grid extends this many cells in each direction
 const INTERACT_RADIUS = 3; // distance allowed for interactions
-const TARGET_VALUE = 16; // will increase in a later D3.b stage
+const TARGET_VALUE = 32; // will increase in a later D3.b stage
 
 // -----------------------------------------
 // Global cell coordinate system (Null Island anchor)
