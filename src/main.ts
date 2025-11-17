@@ -88,7 +88,7 @@ document.body.append(mapDiv);
 // Leaflet map setup
 // -----------------------------------------
 const map = leaflet.map(mapDiv, {
-  center: CLASSROOM,
+  center: [playerCell.i * TILE, playerCell.j * TILE],
   zoom: 19,
   minZoom: 19,
   maxZoom: 19,
@@ -103,7 +103,11 @@ leaflet
   .addTo(map);
 
 // Player marker at classroom
-const playerMarker = leaflet.marker(CLASSROOM);
+const playerMarker = leaflet.marker([
+  playerCell.i * TILE,
+  playerCell.j * TILE,
+]).addTo(map).bindTooltip("You are here!");
+
 playerMarker.addTo(map).bindTooltip("You are here!");
 
 // -----------------------------------------
@@ -234,5 +238,16 @@ function drawGrid() {
   }
 }
 
+// Convert player lat/long to cell coords and update marker + view
+
+function updatePlayerPosition() {
+  const lat = playerCell.i * TILE;
+  const lng = playerCell.j * TILE;
+
+  playerMarker.setLatLng([lat, lng]);
+  map.setView([lat, lng], 19);
+}
+
 // Initial draw
 drawGrid();
+updatePlayerPosition();

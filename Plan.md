@@ -108,3 +108,10 @@ Player can:
 [x] Create helpers:
 [x] - latLngToCell(lat, lng) function
 [x] - cellToBounds(i, j) function
+
+## Player Position changes
+
+[x] Track player with playerCell: Cell
+[x] Initialize playerCell by converting classroom lat/long to a cell
+[x] Map center always reflects playerCell
+[x] Update playerMarker position dynamically
