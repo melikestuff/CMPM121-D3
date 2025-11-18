@@ -1,24 +1,24 @@
 # D3: World of Bits
 
-# Game Design Vision
+## Game Design Vision
 
 This game is map-based crafting game inspired by 4096 and Pokémon Go.
 Players explore real-world map cells to collect and combine tokens. Matching tokens can be crafted into higher-value tokens, and the player wins when they produce a sufficiently high-value one. All interaction is restricted to nearby cells, encouraging movement.
 
-# Technologies
+## Technologies
 
 - TypeScript for most game code, little to no explicit HTML, and all CSS collected in common `style.css` file
 - Deno and Vite for building
 - GitHub Actions + GitHub Pages for deployment automation
 
-# Assignments
+## Assignments
 
 ## D3.a: Core mechanics (token collection and crafting)
 
 Key technical challenge: Can you assemble a map-based user interface using the Leaflet mapping framework?
 Key gameplay challenge: Can players collect and craft tokens from nearby locations to finally make one of sufficiently high value?
 
-### Steps
+### Steps D3.A
 
 ## Set up
 
@@ -102,6 +102,8 @@ Player can:
 [x] Player should now be able to craft a higher value token
 [x] Raise victory requirement appropriately
 
+### Steps D3.B
+
 ## New Global Coordinate System
 
 [x] Create a Cell type: { i: number; j: number }
@@ -162,6 +164,7 @@ Player can:
 
 ## D3.C implementation
 
+Steps
 [x] Cells should use effective memory-saving strategys so cells not visible on the map do not require memory for storage if they have not been modified by the player.
 [x] Cells store their state if modified
 [x] Map has a memory of their state even when not visible
@@ -169,10 +172,12 @@ Player can:
 
 ## D3.D implementation
 
+### Steps D3.D
+
 Player must be moved by geolocation API now (real-time movement). The game must also have capabilities to save the game state for future page loads.
 
-[] Browser geolocation API used to control player movement instead of on-screen buttons
-[] Code shouldn't depend/run when the player moves
+[x] Browser geolocation API used to control player movement instead of on-screen buttons
+[x] Code shouldn't depend/run when the player moves
 [x] Store game state AKA save the game using browser localStorage API to persist game states between page loads
 [x] Player should be able to reset their save state or start a new game
-[] Be able to switch from button-based movement to geolocation-based movement
+[x] Be able to switch from button-based movement to geolocation-based movement

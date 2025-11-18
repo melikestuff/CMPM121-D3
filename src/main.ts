@@ -60,7 +60,7 @@ function playerLatLng(): leaflet.LatLngExpression {
 // -----------------------------------------
 const controlPanelDiv = document.createElement("div");
 controlPanelDiv.id = "controlPanel";
-controlPanelDiv.textContent = "World of Bits — D3.b";
+controlPanelDiv.textContent = "World of Bits";
 document.body.append(controlPanelDiv);
 
 const statusPanelDiv = document.createElement("div");
@@ -145,6 +145,7 @@ function getCellValue(cell: Cell): number | null {
 function setCellValue(cell: Cell, val: number | null) {
   cellStates.set(cellKey(cell), val);
 }
+
 // -----------------------------------------
 // D3.d — SAVE & LOAD STATE
 // -----------------------------------------
@@ -159,7 +160,6 @@ function saveWorldState() {
   localStorage.setItem(SAVE_KEY, json);
 }
 
-// Load state from localStorage (on page load)
 function loadWorldState() {
   const json = localStorage.getItem(SAVE_KEY);
   if (!json) return; // nothing saved yet
@@ -181,7 +181,7 @@ function loadWorldState() {
 let drawnLayers: leaflet.Layer[] = [];
 
 function clearGrid() {
-  drawnLayers.forEach((l) => map.removeLayer(l));
+  drawnLayers.forEach((layer) => map.removeLayer(layer));
   drawnLayers = [];
 }
 
@@ -262,7 +262,6 @@ function drawGrid(centerCell: Cell) {
       });
 
       const textMarker = leaflet.marker(center, { icon }).addTo(map);
-
       drawnLayers.push(rect, textMarker);
 
       rect.on("click", () => handleCellClick(cell, textMarker));
@@ -270,12 +269,8 @@ function drawGrid(centerCell: Cell) {
   }
 }
 
-// Initial draw
-loadWorldState();
-drawGrid(latLngToCell(CLASS_LAT, CLASS_LNG));
-
 // -----------------------------------------
-// Movement Buttons
+// Movement Buttons (UI only)
 // -----------------------------------------
 const movementDiv = document.createElement("div");
 movementDiv.style.marginTop = "1rem";
@@ -292,10 +287,10 @@ controlPanelDiv.append(movementDiv);
 function movePlayer(di: number, dj: number) {
   playerCell.i += di;
   playerCell.j += dj;
-
-  updatePlayerPosition(); // ONLY update map position
+  updatePlayerPosition();
 }
 
+// Button listeners
 document.getElementById("north")!.addEventListener(
   "click",
   () => movePlayer(1, 0),
@@ -313,51 +308,130 @@ document.getElementById("west")!.addEventListener(
   () => movePlayer(0, -1),
 );
 
+// -----------------------------------------
+// Movement Controller Interface (Facade)
+// -----------------------------------------
+interface MovementController {
+  start(): void;
+  stop(): void;
+}
+
+// BUTTON MOVEMENT (FACADE)
+class ButtonMovementController implements MovementController {
+  start() {
+    movementDiv.style.display = "block";
+  }
+  stop() {
+    movementDiv.style.display = "none";
+  }
+}
+
+// GEOLOCATION MOVEMENT (FACADE)
+class GeolocationMovementController implements MovementController {
+  watchId: number | null = null;
+
+  start() {
+    movementDiv.style.display = "none";
+
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported on this device.");
+      return;
+    }
+
+    this.watchId = navigator.geolocation.watchPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      const newCell = latLngToCell(lat, lng);
+
+      playerCell.i = newCell.i;
+      playerCell.j = newCell.j;
+
+      updatePlayerPosition();
+      drawGrid(newCell);
+    });
+  }
+
+  stop() {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+  }
+}
+
+// -----------------------------------------
+// Movement Mode Switching
+// -----------------------------------------
+let movementController: MovementController;
+
+const modeBtn = document.createElement("button");
+modeBtn.textContent = "Switch to Geolocation";
+modeBtn.style.marginLeft = "1rem";
+controlPanelDiv.append(modeBtn);
+
+let usingGeo = false;
+
+modeBtn.addEventListener("click", () => {
+  movementController.stop();
+
+  if (usingGeo) {
+    movementController = new ButtonMovementController();
+    modeBtn.textContent = "Switch to Geolocation";
+    usingGeo = false;
+  } else {
+    movementController = new GeolocationMovementController();
+    modeBtn.textContent = "Switch to Buttons";
+    usingGeo = true;
+  }
+
+  movementController.start();
+});
+
+// -----------------------------------------
+// RESET WORLD
+// -----------------------------------------
 const resetBtn = document.createElement("button");
 resetBtn.textContent = "Reset World";
 resetBtn.style.marginLeft = "1rem";
+controlPanelDiv.append(resetBtn);
 
 resetBtn.addEventListener("click", () => {
-  // 1. Clear saved world from localStorage
   localStorage.removeItem(SAVE_KEY);
-
-  // 2. Clear in-memory modified cells
   cellStates.clear();
 
-  // 3. Reset player position (back to classroom)
   playerCell.i = Math.floor(CLASS_LAT / TILE);
   playerCell.j = Math.floor(CLASS_LNG / TILE);
 
-  // 4. Reset what player is holding
   heldToken = null;
   updateStatus();
 
-  // 5. Recenter map + player marker
   updatePlayerPosition();
-
-  // 6. Redraw grid at starting cell
   drawGrid(latLngToCell(CLASS_LAT, CLASS_LNG));
 });
 
-controlPanelDiv.append(resetBtn);
+// -----------------------------------------
+// INITIAL LOAD
+// -----------------------------------------
+// 1. Load saved world first
+loadWorldState();
 
-// ==========================================================
-// MAP SCROLLING (TRIGGERS GRID REBUILD)
-// ==========================================================
+// 2. Start movement controller (choose default buttons)
+movementController = new ButtonMovementController();
+movementController.start();
+
+// 3. Re-center the map to the *actual* player position from save
+updatePlayerPosition();
+
+// 4. Draw grid around the loaded player position
+drawGrid(latLngToCell(playerCell.i, playerCell.j));
+// -----------------------------------------
+// SCROLL HANDLING
+// -----------------------------------------
 map.on("moveend", () => {
   const center = map.getCenter();
   const viewCell = latLngToCell(center.lat, center.lng);
 
-  // Determine visible cells
-  const newVisible = new Set<string>();
-  for (let di = -GRID_RADIUS; di <= GRID_RADIUS; di++) {
-    for (let dj = -GRID_RADIUS; dj <= GRID_RADIUS; dj++) {
-      newVisible.add(`${viewCell.i + di},${viewCell.j + dj}`);
-    }
-  }
-
   drawGrid(viewCell);
-
-  // Player stays where they are
   playerMarker.setLatLng(playerLatLng());
 });
