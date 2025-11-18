@@ -81,6 +81,8 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ## D3.B: Globe-spanning Gameplay
 
+Movement must be possible (any method is fine right now, on-screen buttons will work too). And more functionaility to the map has to be added. Code should be refactored here too.
+
 ## Software Requirements (per assignment)
 
 [x] Interface provides movement buttons (N/S/E/W)
@@ -164,3 +166,13 @@ Player can:
 [x] Cells store their state if modified
 [x] Map has a memory of their state even when not visible
 [x] Use a map using cells as keys and token as values
+
+## D3.D implementation
+
+Player must be moved by geolocation API now (real-time movement). The game must also have capabilities to save the game state for future page loads.
+
+[] Browser geolocation API used to control player movement instead of on-screen buttons
+[] Code shouldn't depend/run when the player moves
+[x] Store game state AKA save the game using browser localStorage API to persist game states between page loads
+[x] Player should be able to reset their save state or start a new game
+[] Be able to switch from button-based movement to geolocation-based movement

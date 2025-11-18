@@ -145,6 +145,35 @@ function getCellValue(cell: Cell): number | null {
 function setCellValue(cell: Cell, val: number | null) {
   cellStates.set(cellKey(cell), val);
 }
+// -----------------------------------------
+// D3.d — SAVE & LOAD STATE
+// -----------------------------------------
+
+// Key used in localStorage
+const SAVE_KEY = "WorldOfBits_CellStates_v1";
+
+// Save state to localStorage
+function saveWorldState() {
+  const entries = Array.from(cellStates.entries());
+  const json = JSON.stringify(entries);
+  localStorage.setItem(SAVE_KEY, json);
+}
+
+// Load state from localStorage (on page load)
+function loadWorldState() {
+  const json = localStorage.getItem(SAVE_KEY);
+  if (!json) return; // nothing saved yet
+
+  try {
+    const entries: [string, number | null][] = JSON.parse(json);
+    cellStates.clear();
+    for (const [key, val] of entries) {
+      cellStates.set(key, val);
+    }
+  } catch (e) {
+    console.error("Failed to load world state:", e);
+  }
+}
 
 // -----------------------------------------
 // Grid drawing + interactions
@@ -177,6 +206,7 @@ function handleCellClick(cell: Cell, textMarker: leaflet.Marker) {
     if (heldToken !== null) {
       setLabel(heldToken);
       setCellValue(cell, heldToken);
+      saveWorldState();
       heldToken = null;
       updateStatus();
     }
@@ -189,6 +219,7 @@ function handleCellClick(cell: Cell, textMarker: leaflet.Marker) {
     updateStatus();
     setLabel(null);
     setCellValue(cell, null);
+    saveWorldState();
     return;
   }
 
@@ -197,6 +228,7 @@ function handleCellClick(cell: Cell, textMarker: leaflet.Marker) {
     const newVal = current * 2;
     setLabel(newVal);
     setCellValue(cell, newVal);
+    saveWorldState();
     heldToken = null;
     updateStatus();
 
@@ -239,6 +271,7 @@ function drawGrid(centerCell: Cell) {
 }
 
 // Initial draw
+loadWorldState();
 drawGrid(latLngToCell(CLASS_LAT, CLASS_LNG));
 
 // -----------------------------------------
@@ -279,6 +312,34 @@ document.getElementById("west")!.addEventListener(
   "click",
   () => movePlayer(0, -1),
 );
+
+const resetBtn = document.createElement("button");
+resetBtn.textContent = "Reset World";
+resetBtn.style.marginLeft = "1rem";
+
+resetBtn.addEventListener("click", () => {
+  // 1. Clear saved world from localStorage
+  localStorage.removeItem(SAVE_KEY);
+
+  // 2. Clear in-memory modified cells
+  cellStates.clear();
+
+  // 3. Reset player position (back to classroom)
+  playerCell.i = Math.floor(CLASS_LAT / TILE);
+  playerCell.j = Math.floor(CLASS_LNG / TILE);
+
+  // 4. Reset what player is holding
+  heldToken = null;
+  updateStatus();
+
+  // 5. Recenter map + player marker
+  updatePlayerPosition();
+
+  // 6. Redraw grid at starting cell
+  drawGrid(latLngToCell(CLASS_LAT, CLASS_LNG));
+});
+
+controlPanelDiv.append(resetBtn);
 
 // ==========================================================
 // MAP SCROLLING (TRIGGERS GRID REBUILD)
